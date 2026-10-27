@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>恐怖事件侦探报告</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Layout: an original SVG corkboard of the case's clues (door crack, alarm clock, time-word sticky notes, case card, red string) fills the screen behind everything as a fixed layer; one centred report column (max 760px) of cream cards sits on it. Single light look by choice, matched to the artwork. */
+:root{
+  --night:#5B3A24;      /* brown of the frame: headings, buttons */
+  --night-2:#7A4E2D;
+  --lamp:#F2C230;       /* accent: police-tape yellow */
+  --lamp-soft:#FFF3CC;
+  --paper:#FFF8E6;      /* inputs, options */
+  --card:#FFFDF6;
+  --ink:#3A2617;
+  --ink-soft:#7A6250;
+  --line:#EBDCB9;
+  --ok:#22926F; --ok-bg:#E3F4EC;
+  --no:#C94540; --no-bg:#FCE8E6;
+  --focus:#2F7DE1;
+  --ground:#C89A66;     /* corkboard tan */
+  --font-display:"ZCOOL KuaiLe","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --font-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.75}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+ruby rt{font-size:.55em;color:var(--ink-soft);font-weight:400}
+.no-py ruby rt{display:none}
+h1,h2,h3{text-wrap:balance;margin:0;font-weight:400}
+
+/* ---------- background artwork ---------- */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--ground);pointer-events:none}
+.bg::before{content:"";position:absolute;inset:0;background:url("bg.svg") center / cover no-repeat}
+.bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(43,29,18,0) 0%,rgba(43,29,18,.12) 60%,rgba(43,29,18,.28) 100%)}
+
+/* ---------- header band ---------- */
+.band{position:relative;z-index:1;padding-block:clamp(40px,9vw,110px) 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band-inner{max-width:760px;margin:0 auto;background:var(--night);color:#fff;border-radius:14px;padding:22px clamp(18px,4vw,28px) 30px;position:relative;overflow:hidden;box-shadow:0 10px 24px rgba(91,58,36,.25)}
+.band-inner::after{ /* police tape along the bottom edge */
+  content:"";position:absolute;left:0;right:0;bottom:0;height:12px;
+  background:repeating-linear-gradient(-45deg,var(--lamp) 0 14px,#2B1D12 14px 28px)}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.case{color:var(--lamp);font-size:16px;letter-spacing:.04em}
+.py-btn{background:transparent;border:2px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:3px 14px;font-size:15px;cursor:pointer}
+.py-btn[aria-pressed="true"]{background:var(--lamp);border-color:var(--lamp);color:#2B1D12}
+.band h1{font-family:var(--font-display);font-size:clamp(34px,7vw,52px);line-height:1.2;margin-top:6px}
+.band p{margin:6px 0 0;color:#F3E4CF;max-width:36em}
+.band p ruby rt{color:#D9C2A6}
+
+/* ---------- column ---------- */
+main{max-width:760px;margin:22px auto 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 56px;display:flex;flex-direction:column;gap:22px;position:relative;z-index:2}
+.card{background:var(--card);border-radius:14px;padding:clamp(18px,4vw,28px);border:2px solid var(--night);box-shadow:0 8px 20px rgba(91,58,36,.18)}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.who label{display:flex;flex-direction:column;gap:4px;font-size:15px;color:var(--ink-soft)}
+.who input{border:2px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--paper);font-size:18px}
+@media (max-width:480px){.who{grid-template-columns:1fr}}
+
+/* progress */
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border:2px solid var(--night);border-radius:12px;padding:8px 14px}
+.track{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.fill{height:100%;width:0;background:var(--lamp);border-radius:999px;transition:width .4s ease}
+.progress small{display:block;margin-top:4px;color:var(--ink-soft);font-size:14px;font-variant-numeric:tabular-nums}
+
+.part-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.part-tag{font-family:var(--font-display);background:var(--lamp);color:#2B1D12;border-radius:8px;padding:0 10px;font-size:20px;white-space:nowrap}
+.part-head h2{font-family:var(--font-display);font-size:28px}
+.lead{color:var(--ink-soft);margin:0 0 16px}
+
+/* ---------- fill-in table ---------- */
+.tbl-wrap{overflow-x:auto}
+table.report{width:100%;border-collapse:collapse;min-width:0}
+.report th{font-size:15px;color:var(--ink-soft);font-weight:500;text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+.report td{padding:14px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.report td.seg{font-family:var(--font-display);font-size:20px;white-space:nowrap;color:var(--night-2)}
+.blank{display:inline-flex;align-items:center;gap:4px;vertical-align:baseline}
+.blank input{
+  width:7.2em;border:none;border-bottom:3px solid var(--night-2);background:var(--lamp-soft);
+  border-radius:6px 6px 0 0;padding:2px 8px;font-size:18px;text-align:center}
+.blank .num{font-size:13px;color:var(--ink-soft)}
+.blank.right input{border-color:var(--ok);background:var(--ok-bg)}
+.blank.wrong input{border-color:var(--no);background:var(--no-bg)}
+.blank .mark{font-weight:700;width:1em}
+.blank.right .mark{color:var(--ok)} .blank.wrong .mark{color:var(--no)}
+.hint{display:block;font-size:14px;color:var(--no);margin-top:4px}
+.hint[hidden]{display:none}
+@media (max-width:600px){
+  .report thead{display:none}
+  .report tr{display:block;border-bottom:2px solid var(--line);padding:10px 0}
+  .report td{display:block;border:none;padding:4px 0}
+}
+
+.bank{margin-top:16px}
+.bank summary{cursor:pointer;color:var(--ink-soft);font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--paper);border:1px dashed var(--ink-soft);border-radius:999px;padding:2px 14px}
+
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px}
+.btn{border:none;border-radius:12px;padding:10px 24px;font-size:18px;font-weight:700;cursor:pointer;background:var(--night);color:#fff}
+.btn.lamp{background:var(--lamp);color:#2B1D12}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.status{font-size:16px;color:var(--ink-soft)}
+.status.ok{color:var(--ok);font-weight:700}
+
+/* ---------- MCQ ---------- */
+.q{border-top:1px solid var(--line);padding-top:20px;margin-top:20px}
+.q:first-of-type{border-top:none;margin-top:0;padding-top:0}
+.q-top{display:flex;gap:12px;align-items:flex-start}
+.q-num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--night);color:var(--lamp);display:grid;place-items:center;font-family:var(--font-display);font-size:18px;margin-top:3px}
+.q-text{font-weight:500;font-size:19px;min-width:0}
+.q-text .seq{display:block;font-weight:400;color:var(--ink-soft);font-size:17px;margin-top:4px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0 46px}
+@media (max-width:600px){.opts{grid-template-columns:1fr;margin-left:0}}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;text-align:left;cursor:pointer;
+  background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-size:17px;line-height:1.6;min-width:0}
+.opt .l{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink-soft);display:grid;place-items:center;font-size:14px;font-weight:700;margin-top:2px}
+.opt:hover:not(:disabled){border-color:var(--night-2)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.right .l{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--no);background:var(--no-bg)}
+.opt.wrong .l{background:var(--no);border-color:var(--no);color:#fff}
+.opt.dim{opacity:.55}
+.explain{margin:12px 0 0 46px;padding:10px 14px;border-radius:10px;font-size:16px;background:var(--lamp-soft)}
+.explain strong{margin-right:6px}
+.opt.picked{border-color:var(--night-2);background:var(--lamp-soft)}
+.opt.picked .l{background:var(--night-2);border-color:var(--night-2);color:#fff}
+.q-tools{margin:10px 0 0 46px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.help-btn{background:none;border:1px dashed var(--ink-soft);color:var(--ink-soft);border-radius:999px;padding:2px 14px;font-size:15px;cursor:pointer}
+.help-btn[aria-expanded="true"]{border-style:solid;color:var(--ink)}
+.q-hint{padding:8px 14px;border-radius:10px;font-size:16px;border:1px dashed var(--ink-soft);background:var(--paper)}
+.q-wrong{font-size:15px;color:var(--no)}
+@media (max-width:600px){.explain,.q-tools{margin-left:0}}
+
+/* ---------- result ---------- */
+.result{border:3px solid var(--night-2);position:relative}
+.result h2{font-family:var(--font-display);font-size:30px}
+.stamp{position:absolute;right:18px;top:-20px;transform:rotate(7deg);background:var(--card);border:3px solid var(--no);color:var(--no);font-family:var(--font-display);font-size:22px;border-radius:10px;padding:0 12px}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.score{background:var(--paper);border-radius:12px;padding:12px;text-align:center}
+.score b{display:block;font-family:var(--font-display);font-size:34px;font-weight:400;font-variant-numeric:tabular-nums;color:var(--night-2)}
+.score span{font-size:14px;color:var(--ink-soft)}
+@media (max-width:480px){.scores{grid-template-columns:1fr}}
+.review{margin:0;padding-left:1.2em}
+.msg{margin:10px 0 0;font-size:17px}
+.note{color:var(--ink-soft);font-size:15px;margin-top:14px}
+.reset-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.linkbtn{background:none;border:none;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font-size:15px;padding:0}
+.code-box{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;padding:12px 14px;border:2px dashed var(--night-2);border-radius:12px;background:var(--paper)}
+.code-box code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px;word-break:break-all;flex:1 1 240px;min-width:0;color:var(--ink)}
+.code-box .btn{padding:8px 18px;font-size:16px}
+
+/* ---------- teacher view ---------- */
+.t-help{margin:0 0 12px;color:var(--ink-soft)}
+.t-help ol{margin:6px 0 0;padding-left:1.3em}
+#tInput{width:100%;min-height:150px;border:2px solid var(--line);border-radius:12px;background:var(--paper);padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;line-height:1.6;resize:vertical}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 6px}
+@media (max-width:480px){.tiles{grid-template-columns:1fr}}
+.rank{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.rank li{display:grid;grid-template-columns:minmax(0,1fr) 120px 64px;gap:12px;align-items:center}
+@media (max-width:600px){.rank li{grid-template-columns:minmax(0,1fr) 64px}.rank .barcell{grid-column:1 / -1;grid-row:2}}
+.rank .lbl{min-width:0}
+.rank .lbl small{display:block;color:var(--ink-soft);font-size:14px}
+.prio{display:inline-block;background:var(--no);color:#fff;border-radius:999px;font-size:13px;padding:0 10px;margin-left:6px;vertical-align:2px}
+.barcell{height:14px;background:var(--line);border-radius:999px;overflow:hidden}
+.barcell span{display:block;height:100%;background:var(--no);border-radius:999px}
+.rank li.ok .barcell span{background:var(--ok)}
+.rank .num{font-variant-numeric:tabular-nums;text-align:right;font-weight:700}
+.st-wrap{overflow-x:auto}
+.st{width:100%;border-collapse:collapse;font-size:16px}
+.st th{text-align:left;font-weight:500;color:var(--ink-soft);font-size:14px;border-bottom:2px solid var(--line);padding:6px 8px}
+.st td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+.st td.sc{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.t-empty{color:var(--ink-soft);margin:0}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<header class="band">
+  <div class="band-inner">
+    <div class="topline">
+      <span class="case">单元四 《恐怖事件》 课堂小测</span>
+      <button class="py-btn" id="pyBtn" aria-pressed="true">拼音：开</button>
+    </div>
+    <h1>侦探报告</h1>
+    <p id="intro"></p>
+  </div>
+</header>
+
+<main id="student">
+  <div class="progress" aria-hidden="true">
+    <div class="track"><div class="fill" id="bar"></div></div>
+    <small id="barText">已完成 0 / 10 题</small>
+  </div>
+
+  <section class="card who" aria-label="学生资料">
+    <label for="sname">姓名<input id="sname" autocomplete="off" placeholder="例如：陈小明"></label>
+    <label for="sclass">班级／组别<input id="sclass" autocomplete="off" placeholder="例如：2G1 第3组"></label>
+  </section>
+
+  <section class="card" aria-labelledby="p1">
+    <div class="part-head"><span class="part-tag">第一部分</span><h2 id="p1">填一填</h2></div>
+    <p class="lead" id="lead1"></p>
+    <div class="tbl-wrap">
+      <table class="report">
+        <thead><tr><th>段落</th><th>主要内容</th><th>“我”和蒋妍的关系变化</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <details class="bank">
+      <summary>需要帮忙？打开词库看一看</summary>
+      <div class="chips" id="chips"></div>
+    </details>
+    <div class="actions">
+      <button class="btn" id="checkFill">检查答案</button>
+      <span class="status" id="fillStatus" role="status"></span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="p2">
+    <div class="part-head"><span class="part-tag">第二部分</span><h2 id="p2">选一选</h2></div>
+    <p class="lead" id="lead2"></p>
+    <div id="mcq"></div>
+    <div class="actions">
+      <button class="btn" id="checkMcq">检查答案</button>
+      <span class="status" id="mcqStatus" role="status"></span>
+    </div>
+  </section>
+
+  <section class="card result" id="result" hidden aria-live="polite">
+    <span class="stamp">已破案</span>
+    <h2 id="rTitle">侦探成绩卡</h2>
+    <div class="scores">
+      <div class="score"><b id="sFill">0/5</b><span>填一填（第一次检查）</span></div>
+      <div class="score"><b id="sMcq">0/5</b><span>选一选</span></div>
+      <div class="score"><b id="sAll">0/10</b><span>总分</span></div>
+    </div>
+    <p class="msg" id="rMsg"></p>
+    <div id="rReview"></div>
+    <div class="code-box"><span>答题码：</span><code id="code"></code><button class="btn lamp" id="copyCode">复制答题码</button></div>
+    <p class="note" id="codeNote">请按“复制答题码”，再贴到老师指定的地方（例如 SLS）。也可以把这张成绩卡截图交给老师。</p>
+    <div class="reset-row"><button class="linkbtn" id="resetAsk">重新做一次</button><span id="resetConfirm" hidden>确定清除所有答案吗？ <button class="linkbtn" id="resetYes">确定</button> <button class="linkbtn" id="resetNo">取消</button></span></div>
+  </section>
+</main>
+
+<main id="teacher" hidden>
+  <section class="card" aria-labelledby="t1">
+    <div class="part-head"><span class="part-tag">步骤一</span><h2 id="t1">贴上答题码</h2></div>
+    <div class="t-help">学生做完小测后，成绩卡上会出现一行“答题码”。
+      <ol><li>请学生把答题码贴到 SLS、Google Form 或 Padlet。</li><li>把所有答题码复制下来，贴进下面的框里（一行一个，夹着别的文字也没关系）。</li><li>按“统计全班结果”。</li></ol>
+    </div>
+    <textarea id="tInput" aria-label="学生答题码" placeholder="KB|陈小明|2G1 第3组|1101110110"></textarea>
+    <div class="actions">
+      <button class="btn" id="tRun">统计全班结果</button>
+      <button class="btn ghost" id="tSample">载入示例</button>
+      <button class="btn ghost" id="tClear">清空</button>
+      <span class="status" id="tStatus" role="status"></span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="t2">
+    <div class="part-head"><span class="part-tag">步骤二</span><h2 id="t2">全班结果</h2></div>
+    <div id="tOut"><p class="t-empty">还没有资料。贴上学生的答题码后，按“统计全班结果”，这里会显示全班答错最多的题目。</p></div>
+  </section>
+</main>
+
+<script>
+/* ---------- pinyin ---------- */
+const PY={
+  '蒋妍':'jiǎng yán','室友':'shì yǒu','宿舍':'sù shè','闹钟':'nào zhōng','冤家':'yuān jia','彻底':'chè dǐ',
+  '似乎':'sì hū','人影':'rén yǐng','锁':'suǒ','黑暗':'hēi àn','聊':'liáo','道歉':'dào qiàn','爱好':'ài hào',
+  '转机':'zhuǎn jī','无所不谈':'wú suǒ bù tán','误会':'wù huì','习惯':'xí guàn','起因':'qǐ yīn','结果':'jié guǒ',
+  '晚睡早起':'wǎn shuì zǎo qǐ','朝她大喊':'cháo tā dà hǎn','紧张':'jǐn zhāng','侦探':'zhēn tàn','缝':'fèng',
+  '从此':'cóng cǐ','女鬼':'nǚ guǐ','关系':'guān xi','段落':'duàn luò','共同':'gòng tóng'
+};
+const KEYS=Object.keys(PY).sort((a,b)=>b.length-a.length);
+const RE=new RegExp(KEYS.join('|'),'g');
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const py=t=>esc(t).replace(RE,m=>`<ruby>${m}<rt>${PY[m]}</rt></ruby>`);
+const $=id=>document.getElementById(id);
+
+$('intro').innerHTML=py('小侦探，今天我们读了《恐怖事件》。请完成这份报告，看看你是不是真的读懂了“我”和蒋妍的故事。');
+$('lead1').innerHTML=py('根据课文，在空格里打出正确的词语。');
+$('lead2').innerHTML=py('选出正确的答案。5题都选好后，按“检查答案”。不会做的题目，可以按“需要帮忙？”看提示。');
+
+/* ---------- state (per-viewer draft only) ---------- */
+const KEY='kongbu-quiz-v3';
+let S=(()=>{try{return JSON.parse(localStorage.getItem(KEY))||null}catch(e){return null}})()||{name:'',cls:'',fill:['','','','',''],fillFirst:null,fillFirstWrong:[],fillDone:false,mcq:Array(5).fill(null),mcqRight:Array(5).fill(false),mcqChecked:Array(5).fill(false),mcqFirst:null,mcqFirstWrong:[],help:Array(5).fill(false)};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+/* ---------- part 1: fill-in table ---------- */
+const ANS=[['晚睡早起'],['朝她大喊','对她大喊','向她大喊','大喊'],['冤家'],['锁上门','锁门','锁上了门','锁好门'],['爱好','共同的爱好','共同爱好']];
+const HINTS=['看看第1段：蒋妍有什么习惯？','看看第2段：“我”气得做了什么？','看看第2段：从此，我们彻底成了……','看看第5段：“我”赶紧做了什么？','看看第6段：我们发现我俩有很多共同的……'];
+const norm=s=>s.replace(/[\s“”"'‘’「」，。！,.!、]/g,'');
+const blank=i=>`<span class="blank" id="b${i}"><span class="num">${'①②③④⑤'[i]}</span><input id="f${i}" aria-label="空格${i+1}" autocomplete="off" value="${esc(S.fill[i])}"><span class="mark" id="m${i}"></span></span><span class="hint" id="h${i}" hidden></span>`;
+const ROWS=[
+  ['第1段',`蒋妍${blank(0)}的习惯，使“我”和其他室友不能好好休息。“我”和蒋妍说了几次，她却不理。`,'“我”和蒋妍的关系紧张。'],
+  ['第2段',`一天早晨，“我”又被她的闹钟吵醒。“我”气得${blank(1)}。`,`“我”和蒋妍成了“${blank(2)}”。`],
+  ['第3至5段',`一个周六晚上，“我”和蒋妍以为宿舍闹鬼。“我”赶紧${blank(3)}，关灯上床。`,'“我”和蒋妍的关系出现转机。'],
+  ['第6至7段',`“我”和蒋妍聊了很多，我们发现我俩有很多共同的${blank(4)}，蒋妍也为之前的事情跟“我”道了歉。`,'“我”和蒋妍和好了，后来还成了无所不谈的好朋友。']
+];
+// add pinyin to static text but not inside the blank markup
+const pyMixed=html=>html.split(/(<span class="blank"[\s\S]*?<\/span><span class="hint"[^>]*><\/span>)/).map((p,i)=>i%2?p:py(p)).join('');
+$('tbody').innerHTML=ROWS.map(r=>`<tr><td class="seg">${r[0]}</td><td>${pyMixed(r[1])}</td><td>${pyMixed(r[2])}</td></tr>`).join('');
+
+const BANK=['朝她大喊','道歉','爱好','冤家','聊天','晚睡早起','锁上门','害怕'];
+$('chips').innerHTML=BANK.map(w=>`<span class="chip">${PY[w]?`<ruby>${w}<rt>${PY[w]}</rt></ruby>`:py(w)}</span>`).join('');
+
+for(let i=0;i<5;i++){ $('f'+i).addEventListener('input',e=>{S.fill[i]=e.target.value;save();clearMark(i);progress();}); }
+function clearMark(i){ $('b'+i).classList.remove('right','wrong'); $('m'+i).textContent=''; $('h'+i).hidden=true; }
+function gradeFill(show){
+  let ok=0;
+  for(let i=0;i<5;i++){
+    const v=norm(S.fill[i]); const good=ANS[i].includes(v);
+    if(good) ok++;
+    if(show){
+      $('b'+i).classList.toggle('right',good); $('b'+i).classList.toggle('wrong',!good);
+      $('m'+i).textContent=good?'✓':'✗';
+      $('h'+i).hidden=good; if(!good) $('h'+i).innerHTML=py(HINTS[i]);
+    }
+  }
+  return ok;
+}
+$('checkFill').onclick=()=>{
+  if(S.fill.some(v=>!v.trim())){ const st=$('fillStatus'); st.className='status'; st.textContent='还有空格没有填，请先把5个空格都填好。'; return; }
+  const ok=gradeFill(true);
+  if(S.fillFirst===null){ S.fillFirst=ok; S.fillFirstWrong=[0,1,2,3,4].filter(i=>!ANS[i].includes(norm(S.fill[i]))); }
+  const st=$('fillStatus');
+  if(ok===5){ S.fillDone=true; st.className='status ok'; st.textContent='全部正确！'; }
+  else { st.className='status'; st.textContent=`答对 ${ok} 个。看看红色空格下的提示，改好后再检查一次。`; }
+  save(); progress(); maybeResult();
+};
+
+/* ---------- part 2: MCQ ---------- */
+const Q=[
+  {q:'故事的起因是什么？',o:['宿舍里闹鬼','蒋妍晚睡早起，影响“我”和室友休息','新同学走错了宿舍','蒋妍向“我”道歉'],a:1,e:'第1段：蒋妍每晚开着灯苦读到十二点，早上的闹钟又吵醒大家。这是事情的起因。'},
+  {q:'第3至7段：下面哪一个是正确的故事顺序？',seq:'①那一夜，我们在黑暗中聊了很多　②从那天起，我们成了无所不谈的朋友　③一个周六晚上，宿舍里只剩下我们两个人　④忽然，门外传来转动门把手的声音',o:['③④①②','③①④②','④③①②','③④②①'],a:0,e:'看时间词：一个周六晚上（第3段）→ 忽然（第4段）→ 那一夜（第6段）→ 从那天起（第7段）。'},
+  {q:'“我”和蒋妍为什么会变成好朋友？',o:['因为蒋妍不再开灯读书','因为老师让她们和好','因为那一夜她们聊了很多，发现有共同的爱好，蒋妍也道了歉','因为她们一起抓到了女鬼'],a:2,e:'第6段：黑暗中两人聊了很多，发现有很多共同的爱好，蒋妍也道了歉。'},
+  {q:'门外的“女鬼”原来是谁？',o:['宿舍的管理员','蒋妍的妹妹','隔壁的室友','新来的同学，走错了宿舍'],a:3,e:'第8段：原来她是新来的同学，就住在楼上，那天走错了宿舍。'},
+  {q:'“我”和蒋妍的关系是怎样变化的？',o:['好朋友 → 冤家 → 关系紧张 → 出现转机','关系紧张 → 冤家 → 出现转机 → 无所不谈的好朋友','冤家 → 好朋友 → 关系紧张 → 出现转机','出现转机 → 关系紧张 → 冤家 → 好朋友'],a:1,e:'一开始关系紧张，后来成了“冤家”；周六晚上的“恐怖事件”让关系出现转机；最后两人成了无所不谈的好朋友。'}
+];
+const QHINT=[
+  '看看第1段：事情为什么会发生？',
+  '找时间词：哪一件事发生在“一个周六晚上”？哪一件事是“从那天起”？',
+  '看看第6段：那一夜，她们做了什么？',
+  '看看第8段：几天后，“我”在楼下遇到了谁？',
+  '按段落看：第1段、第2段、第3至5段、第6至7段，两人的关系各是怎样的？'
+];
+const L='ABCD';
+function renderMcq(){
+  $('mcq').innerHTML=Q.map((x,i)=>{
+    const pick=S.mcq[i], locked=S.mcqRight[i], checked=S.mcqChecked[i];
+    const opts=x.o.map((t,k)=>{
+      let cls='opt';
+      if(locked){ cls+= k===x.a?' right':' dim'; }
+      else if(checked && k===pick){ cls+=' wrong'; }
+      else if(k===pick){ cls+=' picked'; }
+      return `<button class="${cls}" data-q="${i}" data-k="${k}" aria-pressed="${k===pick}" ${locked?'disabled':''}><span class="l">${L[k]}</span><span>${py(t)}</span></button>`;
+    }).join('');
+    let tools='';
+    if(locked){
+      tools=`<div class="explain" role="status"><strong>答对了！</strong>${py(x.e)}</div>`;
+    } else {
+      const wrongNote=checked?`<span class="q-wrong">✗ ${py('这个答案不对，请看提示，再选一次。')}</span>`:'';
+      const showHint=S.help[i]||checked;
+      tools=`<div class="q-tools">${wrongNote}<button class="help-btn" data-h="${i}" aria-expanded="${showHint}">需要帮忙？</button>${showHint?`<div class="q-hint">💡 ${py(QHINT[i])}</div>`:''}</div>`;
+    }
+    return `<div class="q"><div class="q-top"><span class="q-num">${i+1}</span><div class="q-text">${py(x.q)}${x.seq?`<span class="seq">${py(x.seq)}</span>`:''}</div></div><div class="opts" role="group" aria-label="第${i+1}题选项">${opts}</div>${tools}</div>`;
+  }).join('');
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.q; if(S.mcqRight[i]) return;
+    S.mcq[i]=+b.dataset.k; S.mcqChecked[i]=false; save(); renderMcq(); progress();
+  });
+  document.querySelectorAll('.help-btn').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.h; S.help[i]=!S.help[i]; if(!S.help[i]) S.mcqChecked[i]=false; save(); renderMcq();
+  });
+}
+renderMcq();
+$('checkMcq').onclick=()=>{
+  const st=$('mcqStatus');
+  const left=S.mcq.filter(v=>v===null).length;
+  if(left){ st.className='status'; st.textContent=`还有 ${left} 题没有选，请先把5题都选好。`; return; }
+  Q.forEach((x,i)=>{ if(!S.mcqRight[i]){ S.mcqRight[i]=S.mcq[i]===x.a; S.mcqChecked[i]=!S.mcqRight[i]; } });
+  const ok=S.mcqRight.filter(Boolean).length;
+  if(S.mcqFirst===null){ S.mcqFirst=ok; S.mcqFirstWrong=Q.map((_,i)=>i).filter(i=>!S.mcqRight[i]); }
+  if(ok===5){ st.className='status ok'; st.textContent='全部正确！'; }
+  else { st.className='status'; st.textContent=`答对 ${ok} 题。看看红色题目的提示，改好后再检查一次。`; }
+  save(); renderMcq(); progress(); maybeResult();
+};
+
+/* ---------- progress & result ---------- */
+function progress(){
+  const f=S.fill.filter(v=>v.trim()).length, m=S.mcq.filter(v=>v!==null).length, n=f+m;
+  $('bar').style.width=(n/10*100)+'%'; $('barText').textContent=`已完成 ${n} / 10 题`;
+}
+function maybeResult(){
+  if(S.fillFirst===null||S.mcqFirst===null){ $('result').hidden=true; return; }
+  const mOk=S.mcqFirst, fOk=S.fillFirst, all=fOk+mOk;
+  $('sFill').textContent=fOk+'/5'; $('sMcq').textContent=mOk+'/5'; $('sAll').textContent=all+'/10';
+  const who=[S.name.trim(),S.cls.trim()].filter(Boolean).join('，');
+  $('rTitle').textContent=who?`侦探成绩卡：${who}`:'侦探成绩卡';
+  $('rMsg').innerHTML=py(all>=9?'太棒了！你已经读懂了整个故事。':all>=6?'做得不错！再看看下面的题目，下节课会更厉害。':'没关系，我们下节课会再一起读这个故事。先看看下面要复习的地方。');
+  const wrong=[], missF=[];
+  S.fillFirstWrong.forEach(i=>missF.push('填一填 '+'①②③④⑤'[i]));
+  S.mcqFirstWrong.forEach(i=>wrong.push('选一选 第'+(i+1)+'题'));
+  const list=[...missF,...wrong];
+  $('rReview').innerHTML=list.length?`<p class="msg"><strong>要复习的地方：</strong></p><ul class="review">${list.map(t=>`<li>${t}</li>`).join('')}</ul>`:'';
+  $('code').textContent=codeStr();
+  $('result').hidden=false;
+}
+
+/* ---------- answer code ---------- */
+const clean=v=>(v||'').replace(/[|\n\r]/g,' ').trim();
+function bits(){
+  const f=[0,1,2,3,4].map(i=>S.fillFirstWrong.includes(i)?'0':'1').join('');
+  const m=[0,1,2,3,4].map(i=>S.mcqFirstWrong.includes(i)?'0':'1').join('');
+  return f+m;
+}
+function codeStr(){ return `KB|${clean(S.name)||'未填姓名'}|${clean(S.cls)||'-'}|${bits()}`; }
+function selectCode(){ const r=document.createRange(); r.selectNodeContents($('code')); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+$('copyCode').onclick=()=>{
+  const txt=codeStr(), note=$('codeNote');
+  const done=()=>{ $('copyCode').textContent='已复制'; setTimeout(()=>$('copyCode').textContent='复制答题码',1800); };
+  const fail=()=>{ selectCode(); note.textContent='没办法自动复制。答题码已经选取好了，请长按或按 Ctrl+C 复制。'; };
+  try{ navigator.clipboard.writeText(txt).then(done,fail); }catch(e){ fail(); }
+};
+
+/* ---------- name fields ---------- */
+$('sname').value=S.name; $('sclass').value=S.cls;
+$('sname').oninput=e=>{S.name=e.target.value;save();maybeResult();};
+$('sclass').oninput=e=>{S.cls=e.target.value;save();maybeResult();};
+
+/* ---------- reset ---------- */
+$('resetAsk').onclick=()=>{$('resetConfirm').hidden=false;};
+$('resetNo').onclick=()=>{$('resetConfirm').hidden=true;};
+$('resetYes').onclick=()=>{ try{localStorage.removeItem(KEY)}catch(e){} location.reload(); };
+
+/* ---------- teacher view (#teacher) ---------- */
+const ITEMS=[
+  ['填一填①','第1段：蒋妍的习惯'],['填一填②','第2段：“我”气得做了什么'],['填一填③','第2段：两人成了什么'],
+  ['填一填④','第5段：“我”赶紧做了什么'],['填一填⑤','第6段：两人有共同的什么'],
+  ['选一选1','故事的起因'],['选一选2','第3至7段的故事顺序'],['选一选3','为什么变成好朋友'],
+  ['选一选4','“女鬼”原来是谁'],['选一选5','两人关系的变化']
+];
+const TKEY='kongbu-teacher-input';
+const SAMPLE=['（示例）KB|陈小明|2G1 第1组|1111101111','（示例）KB|李美玲|2G1 第1组|1101111011','（示例）KB|王俊杰|2G1 第2组|1011101010',
+  '（示例）KB|林慧|2G1 第2组|1111111111','（示例）KB|张伟|2G1 第3组|0101101011','（示例）KB|黄丽|2G1 第3组|1111101110'].join('\n');
+function parseCodes(text){
+  const map=new Map(); const re=/KB\|([^|\n]*)\|([^|\n]*)\|([01]{10})/g; let m;
+  while((m=re.exec(text))){ const name=m[1].trim()||'未填姓名', cls=m[2].trim(); map.set(name+'|'+cls,{name,cls,b:m[3]}); }
+  return [...map.values()];
+}
+function runTeacher(){
+  const text=$('tInput').value; try{localStorage.setItem(TKEY,text)}catch(e){}
+  const rows=parseCodes(text), st=$('tStatus'), out=$('tOut');
+  if(!rows.length){ st.className='status'; st.textContent='找不到答题码。答题码的样子是：KB|姓名|班级|10个0或1。'; out.innerHTML='<p class="t-empty">还没有资料。</p>'; return; }
+  const n=rows.length, wrong=ITEMS.map((_,i)=>rows.filter(r=>r.b[i]==='0').length);
+  const scores=rows.map(r=>[...r.b].filter(c=>c==='1').length);
+  const avg=(scores.reduce((a,b)=>a+b,0)/n).toFixed(1), full=scores.filter(x=>x===10).length;
+  const order=ITEMS.map((_,i)=>i).sort((a,b)=>wrong[b]-wrong[a]||a-b);
+  const top=order.filter(i=>wrong[i]>0).slice(0,3);
+  st.className='status ok'; st.textContent=`已统计 ${n} 位学生。`+(text.includes('（示例）')?'（含示例资料）':'');
+  out.innerHTML=`
+    <div class="tiles">
+      <div class="score"><b>${n}</b><span>学生人数</span></div>
+      <div class="score"><b>${avg}</b><span>平均分（满分10）</span></div>
+      <div class="score"><b>${full}</b><span>全部答对</span></div>
+    </div>
+    <h3 class="part-head" style="margin-top:18px"><span style="font-family:var(--font-display);font-size:22px">答错最多的题目</span></h3>
+    <p class="t-empty">按第一次检查的结果统计。标着“优先讲解”的题目，建议在总结环节讲解。</p>
+    <ol class="rank">${order.map(i=>{const pct=Math.round(wrong[i]/n*100);return `
+      <li class="${wrong[i]?'':'ok'}"><div class="lbl"><strong>${ITEMS[i][0]}</strong>${top.includes(i)?'<span class="prio">优先讲解</span>':''}<small>${ITEMS[i][1]}</small></div>
+      <div class="barcell" aria-hidden="true"><span style="width:${pct}%"></span></div>
+      <div class="num">${wrong[i]} 人</div></li>`}).join('')}</ol>
+    <h3 style="font-family:var(--font-display);font-size:22px;margin-top:24px">每位学生</h3>
+    <div class="st-wrap"><table class="st"><thead><tr><th>姓名</th><th>班级／组别</th><th>分数</th><th>答错的题目</th></tr></thead><tbody>
+    ${rows.map((r,k)=>({r,sc:scores[k]})).sort((a,b)=>a.sc-b.sc).map(({r,sc})=>`<tr><td>${esc(r.name)}</td><td>${esc(r.cls)}</td><td class="sc">${sc}/10</td><td>${[...r.b].map((c,i)=>c==='0'?ITEMS[i][0]:null).filter(Boolean).join('、')||'全对'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+$('tRun').onclick=runTeacher;
+$('tSample').onclick=()=>{ $('tInput').value=SAMPLE; runTeacher(); };
+$('tClear').onclick=()=>{ $('tInput').value=''; try{localStorage.removeItem(TKEY)}catch(e){} $('tStatus').textContent=''; $('tOut').innerHTML='<p class="t-empty">还没有资料。贴上学生的答题码后，按“统计全班结果”，这里会显示全班答错最多的题目。</p>'; };
+try{ const saved=localStorage.getItem(TKEY); if(saved) $('tInput').value=saved; }catch(e){}
+const INTRO_STUDENT=$('intro').innerHTML;
+function route(){
+  const t=location.hash==='#teacher';
+  $('teacher').hidden=!t; $('student').hidden=t;
+  document.querySelector('.band h1').textContent=t?'老师后台':'侦探报告';
+  $('intro').innerHTML=t?'把学生的答题码贴进来，就能看到全班哪一题答错最多，以及每位学生答错了哪些题。':INTRO_STUDENT;
+  if(t && $('tInput').value.trim()) runTeacher();
+}
+addEventListener('hashchange',route);
+
+/* ---------- pinyin toggle ---------- */
+const pyBtn=$('pyBtn');
+function setPy(on){document.body.classList.toggle('no-py',!on);pyBtn.setAttribute('aria-pressed',on);pyBtn.textContent='拼音：'+(on?'开':'关');try{localStorage.setItem('kongbu-py',on?'1':'0')}catch(e){}}
+pyBtn.onclick=()=>setPy(pyBtn.getAttribute('aria-pressed')!=='true');
+let pyOn=true; try{pyOn=localStorage.getItem('kongbu-py')!=='0'}catch(e){} setPy(pyOn);
+
+/* restore earlier check state */
+if(S.fillFirst!==null){ const ok=gradeFill(true); const st=$('fillStatus'); if(ok===5){st.className='status ok';st.textContent='全部正确！';} }
+if(S.mcqFirst!==null){ const st=$('mcqStatus'); const ok=S.mcqRight.filter(Boolean).length; if(ok===5){st.className='status ok';st.textContent='全部正确！';} }
+progress(); maybeResult(); route();
+</script>
+</body>
+</html>
